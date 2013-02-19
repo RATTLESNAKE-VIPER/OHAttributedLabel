@@ -25,6 +25,8 @@
 		09E15A26160F63DE003025B4 /* CoreTextUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 09E15A24160F63DE003025B4 /* CoreTextUtils.m */; };
 		09E15A2A160F640D003025B4 /* NSTextCheckingResult+ExtendedURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 09E15A28160F640D003025B4 /* NSTextCheckingResult+ExtendedURL.m */; };
 		09E15A2C160F64EB003025B4 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09E15A2B160F64EB003025B4 /* UIKit.framework */; };
+		C78CACBC16D382F8008DDAE4 /* CopyableAttributedLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = C78CACBB16D382F8008DDAE4 /* CopyableAttributedLabel.m */; };
+		C78CACC416D38630008DDAE4 /* CopyableAttributedLabel.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = C78CACBA16D382F8008DDAE4 /* CopyableAttributedLabel.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -34,6 +36,7 @@
 			dstPath = "include/${PRODUCT_NAME}";
 			dstSubfolderSpec = 16;
 			files = (
+				C78CACC416D38630008DDAE4 /* CopyableAttributedLabel.h in CopyFiles */,
 				09804E0716A8CAA400ADC660 /* OHAttributedLabel.h in CopyFiles */,
 				09804E0816A8CAA400ADC660 /* OHParagraphStyle.h in CopyFiles */,
 				09804E0916A8CAA400ADC660 /* NSAttributedString+Attributes.h in CopyFiles */,
@@ -70,6 +73,8 @@
 		09E15A27160F640D003025B4 /* NSTextCheckingResult+ExtendedURL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSTextCheckingResult+ExtendedURL.h"; sourceTree = "<group>"; };
 		09E15A28160F640D003025B4 /* NSTextCheckingResult+ExtendedURL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSTextCheckingResult+ExtendedURL.m"; sourceTree = "<group>"; };
 		09E15A2B160F64EB003025B4 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		C78CACBA16D382F8008DDAE4 /* CopyableAttributedLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CopyableAttributedLabel.h; sourceTree = "<group>"; };
+		C78CACBB16D382F8008DDAE4 /* CopyableAttributedLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CopyableAttributedLabel.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -152,6 +157,8 @@
 		47554A5A161485A200904E5E /* OHAttributedLabel */ = {
 			isa = PBXGroup;
 			children = (
+				C78CACBA16D382F8008DDAE4 /* CopyableAttributedLabel.h */,
+				C78CACBB16D382F8008DDAE4 /* CopyableAttributedLabel.m */,
 				09E15A02160F57E2003025B4 /* OHAttributedLabel.h */,
 				09E15A03160F57E2003025B4 /* OHAttributedLabel.m */,
 				0926A80E1698ADDD00573783 /* OHParagraphStyle.h */,
@@ -224,6 +231,7 @@
 				0979355D1613A5AE006DB5D5 /* OHASBasicHTMLParser.m in Sources */,
 				097935611613B276006DB5D5 /* OHASBasicMarkupParser.m in Sources */,
 				0926A8111698ADDD00573783 /* OHParagraphStyle.m in Sources */,
+				C78CACBC16D382F8008DDAE4 /* CopyableAttributedLabel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
