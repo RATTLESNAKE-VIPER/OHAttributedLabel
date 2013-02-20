@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import <OHAttributedLabel/CopyableAttributedLabel.h>
 
-@interface CopyableDemoViewController : UIViewController
+@interface CopyableDemoViewController : UIViewController<CopyableAttributedLabelDelegate>
 @property (retain, nonatomic) IBOutlet CopyableAttributedLabel *copyableAttributedLabel;
 
 @end

@@ -29,6 +29,10 @@
 
 - (void)viewDidLoad
 {
+    // Note: Setting Delegate is optional
+    self.copyableAttributedLabel.copyableDelegate = self; //optional properties
+    self.copyableAttributedLabel.highlightedLinkColor = [UIColor colorWithRed:188.0f/255.0f green:210.0f/255.0f blue:229.0f/255.0f alpha:1]; //optional properties
+    
     self.copyableAttributedLabel.attributedText = [OHASBasicHTMLParser attributedStringByProcessingMarkupInAttributedString:self.copyableAttributedLabel.attributedText];
 
 
@@ -53,4 +57,32 @@
     [self setCopyableAttributedLabel:nil];
     [super viewDidUnload];
 }
+
+
+
+
+
+#pragma mark -
+#pragma mark CopyableAttributedLabelDelegate Methods
+
+- (void)showUIMenuControllerAtLocation:(CGPoint)location
+{
+    UIMenuController *menu = [UIMenuController sharedMenuController];
+    [menu setTargetRect:CGRectMake(location.x, location.y, 0.0f, 0.0f) inView:self.copyableAttributedLabel];
+    [menu setMenuVisible:YES animated:YES];
+}
+
+- (void)hideUIMenuController
+{
+    UIMenuController *menu = [UIMenuController sharedMenuController];
+    [menu setMenuVisible:NO animated:YES];
+    [menu update];
+}
+
+- (NSString *)stringToCopyToClipboard
+{
+    return self.copyableAttributedLabel.attributedText.string;
+}
+
+
 @end

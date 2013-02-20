@@ -39,7 +39,7 @@
 					<object class="IBUILabel" id="379554016">
 						<reference key="NSNextResponder" ref="191373211"/>
 						<int key="NSvFlags">303</int>
-						<string key="NSFrame">{{20, 40}, {280, 72}}</string>
+						<string key="NSFrame">{{20, 40}, {280, 60}}</string>
 						<reference key="NSSuperview" ref="191373211"/>
 						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="293483780"/>
@@ -72,7 +72,7 @@ ZG93biB0byBjb3B5KTwvaT4uCg</string>
 						</object>
 						<nil key="IBUIHighlightedColor"/>
 						<int key="IBUIBaselineAdjustment">0</int>
-						<int key="IBUINumberOfLines">5</int>
+						<int key="IBUINumberOfLines">3</int>
 						<int key="IBUILineBreakMode">0</int>
 						<bool key="IBUIAdjustsFontSizeToFit">NO</bool>
 						<double key="preferredMaxLayoutWidth">280</double>

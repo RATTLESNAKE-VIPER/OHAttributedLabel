@@ -9,14 +9,23 @@
 
 
 @interface CopyableAttributedLabel() {
+    CTFrameRef textFrame;
+	CGRect drawingRect;
+    
     CGPoint firstPoint, secondPoint;
     NSTimeInterval time;
 }
 
+-(void)resetTextFrame;
+-(void)drawActiveLinkHighlightForRect:(CGRect)rect;
+
 @end
 
 @implementation CopyableAttributedLabel
+@synthesize copyableDelegate = _copyableDelegate;
+
 static NSTimeInterval LONG_PRESS_THRESHOLD = 0.5;
+
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
     UITouch *touch = [touches anyObject];
@@ -67,11 +76,18 @@ static NSTimeInterval LONG_PRESS_THRESHOLD = 0.5;
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
 {
     // Reset values
-    self.highlighted = NO;
-    UIMenuController *menu = [UIMenuController sharedMenuController];
-    [menu setMenuVisible:NO animated:YES];
-    [menu update];
-    [self resignFirstResponder];
+    if (self.copyableDelegate && [self.copyableDelegate respondsToSelector:@selector(hideUIMenuController)]) {
+        self.highlighted = NO;
+        [self.copyableDelegate hideUIMenuController];
+        [self resignFirstResponder];
+        
+    } else {
+        self.highlighted = NO;
+        UIMenuController *menu = [UIMenuController sharedMenuController];
+        [menu setMenuVisible:NO animated:YES];
+        [menu update];
+        [self resignFirstResponder];
+    }
     
     
     if ([self pointInside:point withEvent:event])
@@ -112,25 +128,42 @@ static NSTimeInterval LONG_PRESS_THRESHOLD = 0.5;
         [menuController setMenuVisible:YES animated:YES];*/
         
         if([self isFirstResponder]) {
-            self.highlighted = NO;
-            UIMenuController *menu = [UIMenuController sharedMenuController];
-            [menu setMenuVisible:NO animated:YES];
-            [menu update];
-            [self resignFirstResponder];
+            if (self.copyableDelegate && [self.copyableDelegate respondsToSelector:@selector(hideUIMenuController)]) {
+                self.highlighted = NO;
+                [self.copyableDelegate hideUIMenuController];
+                [self resignFirstResponder];
+                
+            } else {
+                self.highlighted = NO;
+                UIMenuController *menu = [UIMenuController sharedMenuController];
+                [menu setMenuVisible:NO animated:YES];
+                [menu update];
+                [self resignFirstResponder];
+            }
         }
         else if([self becomeFirstResponder]) {
-            UIMenuController *menu = [UIMenuController sharedMenuController];
-            //[menu setTargetRect:self.bounds inView:self];
-            [menu setTargetRect:CGRectMake(location.x, location.y, 0.0f, 0.0f) inView:self];
-            [menu setMenuVisible:YES animated:YES];
+            if (self.copyableDelegate && [self.copyableDelegate respondsToSelector:@selector(showUIMenuControllerAtLocation:)]) {
+                [self.copyableDelegate showUIMenuControllerAtLocation:location];
+                
+            } else {
+                UIMenuController *menu = [UIMenuController sharedMenuController];
+                //[menu setTargetRect:self.bounds inView:self];
+                [menu setTargetRect:CGRectMake(location.x, location.y, 0.0f, 0.0f) inView:self];
+                [menu setMenuVisible:YES animated:YES];
+            }
         }
     }
 }
 
 - (void)copy:(id) sender {
-    if (self.attributedText && ![self.attributedText isKindOfClass:[NSNull class]]) {
+    if (self.copyableDelegate && [self.copyableDelegate respondsToSelector:@selector(stringToCopyToClipboard)]) {
         UIPasteboard *board = [UIPasteboard generalPasteboard];
-        [board setString:self.attributedText.string];
+        [board setString:[self.copyableDelegate stringToCopyToClipboard]];
+    } else {
+        if (self.attributedText && ![self.attributedText isKindOfClass:[NSNull class]]) {
+            UIPasteboard *board = [UIPasteboard generalPasteboard];
+            [board setString:self.attributedText.string];
+        }
     }
     
     self.highlighted = NO;
@@ -157,95 +190,159 @@ static NSTimeInterval LONG_PRESS_THRESHOLD = 0.5;
     return NO;
 }
 
+-(void)setNeedsDisplay
+{
+	[self resetTextFrame];
+	[super setNeedsDisplay];
+}
+
+-(void)dealloc
+{
+	[self resetTextFrame]; // CFRelease the text frame
+    
+#if ! __has_feature(objc_arc)
+	[super dealloc];
+#endif
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+#pragma mark - Drawing Text
+/////////////////////////////////////////////////////////////////////////////////////
+
+-(void)resetTextFrame
+{
+	if (textFrame)
+    {
+		CFRelease(textFrame);
+		textFrame = NULL;
+	}
+}
 
 - (void)drawTextInRect:(CGRect)rect {
     if (self.highlighted) {
-        CGContextRef ctx = UIGraphicsGetCurrentContext();
-        CGContextSaveGState(ctx);
-        CGContextConcatCTM(ctx, CGAffineTransformMakeTranslation(rect.origin.x, rect.origin.y));
-
-        [[UIColor colorWithRed:188.0f/255.0f green:210.0f/255.0f blue:229.0f/255.0f alpha:1] setFill];
-                
-#if __has_feature(objc_arc)
-        CFAttributedStringRef cfAttrStrWithLinks = (__bridge CFAttributedStringRef)self.attributedText;
-#else
-        CFAttributedStringRef cfAttrStrWithLinks = (CFAttributedStringRef)self.attributedText;
-#endif
-        CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString(cfAttrStrWithLinks);
         
-        CGMutablePathRef path = CGPathCreateMutable();
-        CGPathAddRect(path, NULL, self.bounds);
-
-        NSRange range = [self.attributedText.string rangeOfString:self.attributedText.string];
-       CTFrameRef textFrame = CTFramesetterCreateFrame(framesetter,CFRangeMake(0,0), path, NULL);
-        
-        CFArrayRef lines = CTFrameGetLines(textFrame);
-        CFIndex lineCount = CFArrayGetCount(lines);
-        CGPoint lineOrigins[lineCount];
-        CTFrameGetLineOrigins(textFrame, CFRangeMake(0,0), lineOrigins);
-        for (CFIndex lineIndex = 0; lineIndex < lineCount; lineIndex++)
+        @autoreleasepool
         {
+            CGContextRef ctx = UIGraphicsGetCurrentContext();
+            CGContextSaveGState(ctx);
+            
+            // flipping the context to draw core text
+            // no need to flip our typographical bounds from now on
+            CGContextConcatCTM(ctx, CGAffineTransformScale(CGAffineTransformMakeTranslation(0, self.bounds.size.height), 1.f, -1.f));
 
-            CTLineRef line = CFArrayGetValueAtIndex(lines, (lineCount - lineIndex - 1));
+
             
-            if (!CTLineContainsCharactersFromStringRange(line, range))
+            if (textFrame == NULL)
             {
-                continue; // with next line
-            }
-            
-            // we use this rect to union the bounds of successive runs that belong to the same active link
-            CGRect unionRect = CGRectZero;
-            
-            CFArrayRef runs = CTLineGetGlyphRuns(line);
-            CFIndex runCount = CFArrayGetCount(runs);
-            for (CFIndex runIndex = 0; runIndex < runCount; runIndex++)
-            {
-                CTRunRef run = CFArrayGetValueAtIndex(runs, runIndex);
+#if __has_feature(objc_arc)
+                CFAttributedStringRef cfAttrStrWithLinks = (__bridge CFAttributedStringRef)self.attributedText;
+#else
+                CFAttributedStringRef cfAttrStrWithLinks = (CFAttributedStringRef)self.attributedText;
+#endif
                 
-                if (!CTRunContainsCharactersFromStringRange(run, range))    
+                CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString(cfAttrStrWithLinks);
+                drawingRect = self.bounds;
+                if (self.centerVertically || self.extendBottomToFit)
                 {
-                    if (!CGRectIsEmpty(unionRect))
+                    CGSize sz = CTFramesetterSuggestFrameSizeWithConstraints(framesetter,CFRangeMake(0,0),NULL,CGSizeMake(drawingRect.size.width,CGFLOAT_MAX),NULL);
+                    if (self.extendBottomToFit)
                     {
-                        CGContextFillRect(ctx, unionRect);
-                        unionRect = CGRectZero;
+                        CGFloat delta = MAX(0.f , ceilf(sz.height - drawingRect.size.height)) + 10 /* Security margin */;
+                        drawingRect.origin.y -= delta;
+                        drawingRect.size.height += delta;
                     }
-                    continue; // with next run
+                    if (self.centerVertically && drawingRect.size.height > sz.height)
+                    {
+                        drawingRect.origin.y -= (drawingRect.size.height - sz.height)/2;
+                    }
                 }
-                
-                CGFloat ascent = 0;
-                CGFloat descent = 0;
-                CGFloat leading = 0;
-                CGFloat width = (CGFloat)CTRunGetTypographicBounds(run, CFRangeMake(0, 0), &ascent, &descent, &leading);
-                CGFloat height = ascent + descent;
-                
-                CGFloat xOffset = CTLineGetOffsetForStringIndex(line, CTRunGetStringRange(run).location, NULL);
-                
-                
-                CGRect linkRunRect = CGRectMake(lineOrigins[lineIndex].x + xOffset,
-                                                lineOrigins[lineIndex].y-descent,
-                                                width,
-                                                height);
-                linkRunRect = CGRectIntegral(linkRunRect);		// putting the rect on pixel edges
-                linkRunRect = CGRectInset(linkRunRect, -1, -1);	// increase the rect a little
-                if (CGRectIsEmpty(unionRect))
-                {
-                    unionRect = linkRunRect;
-                } else {
-                    unionRect = CGRectUnion(unionRect, linkRunRect);
-                }
+                CGMutablePathRef path = CGPathCreateMutable();
+                CGPathAddRect(path, NULL, drawingRect);
+                textFrame = CTFramesetterCreateFrame(framesetter,CFRangeMake(0,0), path, NULL);
+                CGPathRelease(path);
+                CFRelease(framesetter);
             }
-        
-            if (!CGRectIsEmpty(unionRect))
-            {
-                CGContextFillRect(ctx, unionRect);
-                unionRect = CGRectZero;
-            }
-        }
-        [super drawTextInRect:rect];
+            
+            // draw highlights for activeLink            
+            [self drawActiveLinkHighlightForRect:drawingRect];            
+            
+            
+            CTFrameDraw(textFrame, ctx);
+            
+            CGContextRestoreGState(ctx);
+        } // @autoreleasepool        
         
     } else {
         [super drawTextInRect:rect];
     }
 }
+
+
+-(void)drawActiveLinkHighlightForRect:(CGRect)rect
+{    
+	CGContextRef ctx = UIGraphicsGetCurrentContext();
+	CGContextSaveGState(ctx);
+	CGContextConcatCTM(ctx, CGAffineTransformMakeTranslation(rect.origin.x, rect.origin.y));
+    if (self.highlightedLinkColor) {
+        [self.highlightedLinkColor setFill];
+    } else {
+        [[UIColor colorWithRed:188.0f/255.0f green:210.0f/255.0f blue:229.0f/255.0f alpha:1] setFill];
+    }
+
+	
+    NSRange activeLinkRange = [self.attributedText.string rangeOfString:self.attributedText.string];
+
+	
+	CFArrayRef lines = CTFrameGetLines(textFrame);
+	CFIndex lineCount = CFArrayGetCount(lines);
+	CGPoint lineOrigins[lineCount];
+	CTFrameGetLineOrigins(textFrame, CFRangeMake(0,0), lineOrigins);
+	for (CFIndex lineIndex = 0; lineIndex < lineCount; lineIndex++)
+    {
+		CTLineRef line = CFArrayGetValueAtIndex(lines, lineIndex);
+		
+		if (!CTLineContainsCharactersFromStringRange(line, activeLinkRange))
+        {
+			continue; // with next line
+		}
+		
+		// we use this rect to union the bounds of successive runs that belong to the same active link
+		CGRect unionRect = CGRectZero;
+		
+		CFArrayRef runs = CTLineGetGlyphRuns(line);
+		CFIndex runCount = CFArrayGetCount(runs);
+		for (CFIndex runIndex = 0; runIndex < runCount; runIndex++)
+        {
+			CTRunRef run = CFArrayGetValueAtIndex(runs, runIndex);
+			
+			if (!CTRunContainsCharactersFromStringRange(run, activeLinkRange))
+            {
+				if (!CGRectIsEmpty(unionRect))
+                {
+					CGContextFillRect(ctx, unionRect);
+					unionRect = CGRectZero;
+				}
+				continue; // with next run
+			}
+			
+			CGRect linkRunRect = CTRunGetTypographicBoundsAsRect(run, line, lineOrigins[lineIndex]);
+			linkRunRect = CGRectIntegral(linkRunRect);		// putting the rect on pixel edges
+			linkRunRect = CGRectInset(linkRunRect, -1, -1);	// increase the rect a little
+			if (CGRectIsEmpty(unionRect))
+            {
+				unionRect = linkRunRect;
+			} else {
+				unionRect = CGRectUnion(unionRect, linkRunRect);
+			}
+		}
+		if (!CGRectIsEmpty(unionRect))
+        {
+			CGContextFillRect(ctx, unionRect);
+			//unionRect = CGRectZero;
+		}
+	}
+	CGContextRestoreGState(ctx);
+}
+
 
 @end
