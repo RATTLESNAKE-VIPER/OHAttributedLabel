@@ -9,8 +9,8 @@
 @protocol CopyableAttributedLabelDelegate <NSObject>
 
 @optional
-- (void)showUIMenuControllerAtLocation:(CGPoint)location;
-- (void)hideUIMenuController;
+- (void)showViewAtLocation:(CGPoint)location;
+- (void)hideView;
 - (NSString*)stringToCopyToClipboard;
 
 @end

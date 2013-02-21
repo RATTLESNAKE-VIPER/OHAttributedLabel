@@ -65,14 +65,14 @@
 #pragma mark -
 #pragma mark CopyableAttributedLabelDelegate Methods
 
-- (void)showUIMenuControllerAtLocation:(CGPoint)location
+- (void)showViewAtLocation:(CGPoint)location
 {
     UIMenuController *menu = [UIMenuController sharedMenuController];
     [menu setTargetRect:CGRectMake(location.x, location.y, 0.0f, 0.0f) inView:self.copyableAttributedLabel];
     [menu setMenuVisible:YES animated:YES];
 }
 
-- (void)hideUIMenuController
+- (void)hideView
 {
     UIMenuController *menu = [UIMenuController sharedMenuController];
     [menu setMenuVisible:NO animated:YES];

@@ -76,9 +76,9 @@ static NSTimeInterval LONG_PRESS_THRESHOLD = 0.5;
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
 {
     // Reset values
-    if (self.copyableDelegate && [self.copyableDelegate respondsToSelector:@selector(hideUIMenuController)]) {
+    if (self.copyableDelegate && [self.copyableDelegate respondsToSelector:@selector(hideView)]) {
         self.highlighted = NO;
-        [self.copyableDelegate hideUIMenuController];
+        [self.copyableDelegate hideView];
         [self resignFirstResponder];
         
     } else {
@@ -128,9 +128,9 @@ static NSTimeInterval LONG_PRESS_THRESHOLD = 0.5;
         [menuController setMenuVisible:YES animated:YES];*/
         
         if([self isFirstResponder]) {
-            if (self.copyableDelegate && [self.copyableDelegate respondsToSelector:@selector(hideUIMenuController)]) {
+            if (self.copyableDelegate && [self.copyableDelegate respondsToSelector:@selector(hideView)]) {
                 self.highlighted = NO;
-                [self.copyableDelegate hideUIMenuController];
+                [self.copyableDelegate hideView];
                 [self resignFirstResponder];
                 
             } else {
@@ -142,8 +142,8 @@ static NSTimeInterval LONG_PRESS_THRESHOLD = 0.5;
             }
         }
         else if([self becomeFirstResponder]) {
-            if (self.copyableDelegate && [self.copyableDelegate respondsToSelector:@selector(showUIMenuControllerAtLocation:)]) {
-                [self.copyableDelegate showUIMenuControllerAtLocation:location];
+            if (self.copyableDelegate && [self.copyableDelegate respondsToSelector:@selector(showViewAtLocation:)]) {
+                [self.copyableDelegate showViewAtLocation:location];
                 
             } else {
                 UIMenuController *menu = [UIMenuController sharedMenuController];

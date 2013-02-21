@@ -1,3 +1,19 @@
+_Update for CopyableAttributedLabel_
+
+Added CopyableAttributedLabel which is a subclass of OHAttributedLabel.
+As the name suggest it provides a way to highlight the text and copy it from OHAttributedLabel to UIPasteboard.
+
+It includes CopyableAttributedLabelDelegate which has methods as
+  * - (void)showViewAtLocation:(CGPoint)location;
+  * - (void)hideView;
+  * - (NSString*)stringToCopyToClipboard;
+
+
+> Note: Setting delegate is optional. By default, the CopyableAttributedLabel shows the UIMenuController at the touched location.
+If you want to show some custom view instead of UIMenuViewController at your location then set the delegate and implement the methods respectively.
+
+----
+
 _Table of Contents_
 
 * [About these classes](#about-these-classes)
