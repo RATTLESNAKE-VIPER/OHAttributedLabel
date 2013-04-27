@@ -294,6 +294,9 @@ static NSTimeInterval LONG_PRESS_THRESHOLD = 0.5;
 
 	
 	CFArrayRef lines = CTFrameGetLines(textFrame);
+	if (!lines) {
+            return;
+    	}
 	CFIndex lineCount = CFArrayGetCount(lines);
 	CGPoint lineOrigins[lineCount];
 	CTFrameGetLineOrigins(textFrame, CFRangeMake(0,0), lineOrigins);
